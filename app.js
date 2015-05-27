@@ -6,7 +6,11 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
-var users = require('./routes/users');
+var questions = require('./routes/questions');
+var votes = require('./routes/votes');
+
+var db = require('./models');
+
 
 var app = express();
 
@@ -22,8 +26,25 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+// ROUTERS begin
+
+
 app.use('/', routes);
-app.use('/users', users);
+app.use('/questions', questions);
+
+// These routes allow us to add or subtract votes from our questions
+app.put('/votes/:question_id/:new_vote_total', function(req, res, next) {
+  // Upvote a question
+  db.Question.find(req.params.question_id).then(function(question) {
+    question.votes = req.params.new_vote_total;
+    question.save().then(function(updatedQuestion) {
+      res.json(updatedQuestion);
+    });
+  });
+});
+
+// ROUTERS end
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
